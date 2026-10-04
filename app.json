@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Shiftline",
+    "slug": "shiftline",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.qsgpr.shiftline"
+    },
+    "android": {
+      "predictiveBackGestureEnabled": false,
+      "package": "com.qsgpr.shiftline"
+    },
+    "web": {},
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Shiftline to share a photo you select with your teammate.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      "expo-notifications"
+    ],
+    "scheme": "shiftline",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bfa251d6-d878-45ba-9ff1-2a924ce77816"
+      }
+    },
+    "owner": "qsgpr"
+  }
+}

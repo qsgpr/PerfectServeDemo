@@ -1,0 +1,167 @@
+import {
+  makeDepartmentSchedule,
+  makeOctoberSchedule,
+} from "./schedule-fixtures";
+import { Snapshot, TeamMember } from "../domain/types";
+export const DEMO_NOW = "2026-10-01T10:00:00Z";
+export const team: TeamMember[] = [
+  {
+    id: "nova",
+    kind: "ai",
+    name: "Nova",
+    role: "AI teammate",
+    specialty: "Team coordination",
+    initials: "AI",
+    color: "#DCEDE7",
+    presence: "available",
+  },
+  {
+    id: "mira",
+    name: "Mira Vale",
+    role: "On-call physician",
+    specialty: "Internal medicine",
+    initials: "MV",
+    color: "#DCEDE7",
+    presence: "in-call",
+  },
+  {
+    id: "ellis",
+    name: "Ellis Rowan",
+    role: "Charge nurse",
+    specialty: "Care coordination",
+    initials: "ER",
+    color: "#E8E1F0",
+    presence: "available",
+  },
+  {
+    id: "noa",
+    name: "Noa Linden",
+    role: "Consulting physician",
+    specialty: "Cardiology",
+    initials: "NL",
+    color: "#F6E7CE",
+    presence: "busy",
+  },
+  {
+    id: "theo",
+    name: "Theo Wren",
+    role: "Clinical pharmacist",
+    specialty: "Pharmacy",
+    initials: "TW",
+    color: "#DCE9F2",
+    presence: "available",
+  },
+  {
+    id: "ada",
+    name: "Ada Solis",
+    role: "On-call physician",
+    specialty: "Internal medicine",
+    initials: "AS",
+    color: "#F0DEDB",
+    presence: "offline",
+  },
+  {
+    id: "remy",
+    name: "Remy Fern",
+    role: "Nurse educator",
+    specialty: "Team education",
+    initials: "RF",
+    color: "#E5EBCF",
+    presence: "available",
+  },
+  {
+    id: "cedar-test",
+    name: "Cedar Test",
+    role: "Team member",
+    specialty: "Care coordination",
+    initials: "CE",
+    color: "#DCEDE7",
+    presence: "available",
+  },
+  {
+    id: "willow-test",
+    name: "Willow Test",
+    role: "Team member",
+    specialty: "Care coordination",
+    initials: "WI",
+    color: "#E8E1F0",
+    presence: "available",
+  },
+];
+export function makeFixtures(): Snapshot {
+  return {
+    team: team.map((m) => ({ ...m })),
+    shifts: [...makeOctoberSchedule(), ...makeDepartmentSchedule(team)],
+    messages: [
+      {
+        id: "welcome",
+        recipientId: "ellis",
+        subject: "Afternoon team huddle",
+        body: "Let’s meet in the team room at 14:00 to review the shift handoff.",
+        priority: "Routine",
+        status: "Replied",
+        createdAt: "2026-10-01T09:35:00Z",
+        events: [
+          {
+            id: "w1",
+            type: "Sent",
+            at: "2026-10-01T09:35:00Z",
+            text: "Message sent.",
+          },
+          {
+            id: "w2",
+            type: "Read",
+            at: "2026-10-01T09:37:00Z",
+            text: "Message read.",
+          },
+          {
+            id: "w3",
+            type: "Replied",
+            at: "2026-10-01T09:40:00Z",
+            text: "Sounds good. I’ll bring the sample handoff checklist.",
+          },
+        ],
+      },
+      {
+        id: "coverage",
+        recipientId: "mira",
+        subject: "Coverage check for the workshop",
+        body: "Please confirm coverage for this afternoon’s team workshop.",
+        priority: "Urgent",
+        status: "Sent",
+        createdAt: "2026-10-01T09:20:00Z",
+        events: [
+          {
+            id: "c1",
+            type: "Sent",
+            at: "2026-10-01T09:20:00Z",
+            text: "Message sent.",
+          },
+        ],
+      },
+      {
+        id: "kit",
+        recipientId: "theo",
+        subject: "Learning kit is ready",
+        body: "The materials are ready for our team learning session.",
+        priority: "Routine",
+        status: "Read",
+        createdAt: "2026-10-01T08:45:00Z",
+        events: [
+          {
+            id: "k1",
+            type: "Sent",
+            at: "2026-10-01T08:45:00Z",
+            text: "Message sent.",
+          },
+          {
+            id: "k2",
+            type: "Read",
+            at: "2026-10-01T08:50:00Z",
+            text: "Message read.",
+          },
+        ],
+      },
+    ],
+  };
+}

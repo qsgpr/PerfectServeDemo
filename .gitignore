@@ -1,0 +1,60 @@
+# Dependencies and build output
+node_modules/
+.expo/
+/dist/
+/web-build/
+expo-env.d.ts
+*.tsbuildinfo
+/ios/
+/android/
+.kotlin/
+.metro-health-check*
+
+# Environment files and private credentials (keep the safe template)
+.env*
+!.env.example
+*.pem
+*.key
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+**/.shiftline-secrets/
+
+# Generated test reports and screenshots
+/test-results*/
+/playwright-report/
+/blob-report/
+/coverage/
+/docs/
+
+# Local assistant notes and editor state
+*.md
+!/README.md
+!/assets/ATTRIBUTION.md
+/.claude/
+/.codex/
+/.vscode/
+/supabase/.temp/
+/supabase/.branches/
+
+# Server-specific Expo Go links and QR codes
+/public/expo-go*
+
+# Unused Expo scaffold artwork; active branding remains versioned
+/assets/icon.png
+/assets/favicon.png
+/assets/splash-icon.png
+/assets/android-icon-*.png
+
+# Logs, OS metadata, and local archives
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+._*
+Thumbs.db
+*.zip
+*.tar
+*.tar.gz
