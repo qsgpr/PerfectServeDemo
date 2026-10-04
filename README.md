@@ -71,5 +71,3 @@ Cloud browser tests require disposable QA accounts via `SHIFTLINE_CLOUD_QA_FILE`
 Voice/video controls simulate calls. Background push requires a signed native build and Apple/Android credentials; Expo Go is not the completed background-delivery setup. Snapshot fetching is not server pagination, and AI context is read-only. This prototype has no EHR integration and makes no HIPAA-compliance claim. Use fictional data and non-patient images.
 
 This is an unofficial prototype, not a PerfectServe product. Referenced branding is documented in [asset attribution](assets/ATTRIBUTION.md); it is not covered by the code license. `app.json` includes the original EAS owner/project and app identifiers; configure your own before creating independent builds.
-
-Generated screenshots, local study guides, historical notes, test reports, editor settings, and environment files are kept locally and excluded from Git. The README, attribution, source, tests, lockfile, and backend migrations remain included.
