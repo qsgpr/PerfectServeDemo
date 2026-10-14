@@ -59,21 +59,32 @@ export function validateRequest(body) {
 }
 export function providerMessages(body, images = new Map()) {
   body = validateRequest(body);
-  const visionInstructions = images.size
-    ? `CURRENT IMAGE CAPABILITY: ${images.size} actual image(s) are supplied as image_url content in this request. Inspect those pixels to answer the latest question. Previous assistant statements about being unable to see images or attachments are outdated and do not describe this request. Never repeat that generic capability denial when image data is present. If a particular image or text cannot be interpreted, explain what is unreadable specifically; do not invent what it contains. Follow all privacy and medical-safety rules below.`
-    : "No actual image pixels are supplied in this request. Do not infer visual details from attachment names or text placeholders.";
   const latest = body.history.at(-1);
   const visualQuestion =
     images.size > 0 &&
     (latest.image ||
       /\b(image|photo|picture|screenshot|attachment|map|board)\b/i.test(
         latest.content,
+      ) ||
+      /\b(?:see|view|read|describe|analy[sz]e|understand)\s+(?:it|this|that|these|them)\b/i.test(
+        latest.content,
       ));
-  // Image inspection gets a fresh visual context. Prior assistant capability
-  // claims are not visual evidence and must not compete with current pixels.
+  const compareImages = /\b(compare|both|all|these|them|two)\b/i.test(
+    latest.content,
+  );
+  const newestImage = body.history.filter((entry) => entry.image).at(-1);
+  // Visual follow-ups inspect the newest picture unless the user asks to compare.
   const history = visualQuestion
-    ? body.history.filter((entry) => entry.image || entry === latest)
+    ? body.history.filter(
+        (entry) =>
+          entry === latest ||
+          (compareImages ? entry.image : entry === newestImage),
+      )
     : body.history;
+  const imageCount = history.filter((entry) => entry.image).length;
+  const visionInstructions = imageCount
+    ? `CURRENT IMAGE CAPABILITY: ${imageCount} actual image(s) are supplied as image_url content in this request. Inspect those pixels to answer the latest question. Previous assistant statements about being unable to see images or attachments are outdated and do not describe this request. Never repeat that generic capability denial when image data is present. If a particular image or text cannot be interpreted, explain what is unreadable specifically; do not invent what it contains. Follow all privacy and medical-safety rules below.`
+    : "No actual image pixels are supplied in this request. Do not infer visual details from attachment names or text placeholders.";
   return [
     {
       role: "system",

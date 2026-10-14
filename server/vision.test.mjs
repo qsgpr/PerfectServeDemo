@@ -258,7 +258,7 @@ test("image inspection excludes stale chat denials while retaining all image inp
   for (let i = 0; i < 3; i++)
     history.push({
       role: "user",
-      content: "Describe this team map.",
+      content: "Compare these team maps.",
       image: { attachmentId: "team-map", entryId: "map-" + i },
     });
   const request = { clockIndex: 0, conversationId: "inspect-test", history };
@@ -269,4 +269,36 @@ test("image inspection excludes stale chat denials while retaining all image inp
   assert.equal(messages.filter((m) => Array.isArray(m.content)).length, 3);
   request.history.push({ role: "user", content: "When is my next shift?" });
   assert(providerMessages(request, images).some((m) => m.role === "assistant"));
+});
+
+test("can you see it inspects the newest picture with no prior capability denials", async () => {
+  const request = {
+    clockIndex: 0,
+    conversationId: "followup-test",
+    history: [
+      {
+        role: "user",
+        content: "[Shared fictional illustration: handoff-board]",
+        image: { attachmentId: "handoff-board", entryId: "old-board" },
+      },
+      { role: "assistant", content: "I can't see images or attachments." },
+      {
+        role: "user",
+        content: "[Shared fictional illustration: team-map]",
+        image: { attachmentId: "team-map", entryId: "new-map" },
+      },
+      { role: "assistant", content: "I can't see images or attachments." },
+      { role: "user", content: "Can you see it?" },
+    ],
+  };
+  const images = await resolveVisionImages(request);
+  const messages = providerMessages(request, images);
+  assert.equal(messages.length, 3);
+  assert.equal(messages.filter((m) => m.role === "assistant").length, 0);
+  assert.equal(
+    messages[1].content[1].image_url.url,
+    VISION_FIXTURES["team-map"],
+  );
+  assert.equal(messages.at(-1).content, "Can you see it?");
+  assert.match(messages[0].content, /1 actual image/);
 });
