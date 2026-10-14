@@ -9,6 +9,7 @@ import { buildAIContext } from "../features/assistant/ai-context";
 import { aiEndpoint } from "../features/assistant/ai-endpoint";
 import { chatEntries } from "../domain/chat";
 import type { Message, Snapshot } from "../domain/types";
+import { supabase } from "../data/supabase";
 // AI and fictional playback share cancellable jobs; registered teammates reply themselves.
 export function useMessagePlayback(
   service: CareService,
@@ -72,6 +73,7 @@ export function useMessagePlayback(
       .at(-1)?.id;
     void (async () => {
       try {
+        const session = supabase ? await supabase.auth.getSession() : null;
         const text = await requestAI(
           aiEndpoint(),
           aiRequest(
@@ -80,6 +82,7 @@ export function useMessagePlayback(
             buildAIContext(account, data, new Date().toISOString()),
           ),
           controller.signal,
+          session?.data.session?.access_token,
         );
         if (controller.signal.aborted || !replyTo) return;
         const reply = await service.receive(

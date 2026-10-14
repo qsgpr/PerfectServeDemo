@@ -34,7 +34,7 @@ export function ListPage<T extends { id: string }>({
   numColumns?: number;
   testID?: string;
 }) {
-  const { styles } = useUI();
+  const { styles, compactLayout } = useUI();
   const segments = useSegments();
   const insets = useSafeAreaInsets();
   const nativeTab =
@@ -60,9 +60,16 @@ export function ListPage<T extends { id: string }>({
       removeClippedSubviews={false}
       keyboardShouldPersistTaps="handled"
       contentInsetAdjustmentBehavior="never"
-      ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+      ItemSeparatorComponent={() => (
+        <View style={{ height: compactLayout ? 12 : 20 }} />
+      )}
       ListHeaderComponent={
-        <View style={{ gap: 20, paddingBottom: 20 }}>
+        <View
+          style={{
+            gap: compactLayout ? 12 : 20,
+            paddingBottom: compactLayout ? 12 : 20,
+          }}
+        >
           <View style={[styles.spread, compact && { flexWrap: "nowrap" }]}>
             <View style={{ gap: 7, flexShrink: 1 }}>
               <Text

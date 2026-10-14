@@ -1,8 +1,8 @@
 import { DEPARTMENTS } from "../../domain/workflows";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
-import { Avatar, Badge, Button, time, useUI } from "../../components/ui";
-import { dayLabel, utcDay } from "../../domain/schedule";
+import { Avatar, Badge, Button, useUI } from "../../components/ui";
+import { dayLabel, localDay, localShiftTime } from "../../domain/schedule";
 import type { Shift, TeamMember } from "../../domain/types";
 
 export function DayHeading({
@@ -18,10 +18,10 @@ export function DayHeading({
   return (
     <View style={styles.spread}>
       <Text accessibilityRole="header" style={styles.heading}>
-        {day === utcDay(now) ? "Today" : dayLabel(day)}
+        {day === localDay(now) ? "Today" : dayLabel(day)}
       </Text>
       <Text style={styles.small}>
-        {day === utcDay(now) ? dayLabel(day) : `${count} assignments`}
+        {day === localDay(now) ? dayLabel(day) : `${count} assignments`}
       </Text>
     </View>
   );
@@ -30,12 +30,14 @@ export function DayHeading({
 export function AssignmentRow({
   day,
   shift,
+  departments = [shift.department],
   member,
   now,
   canMessage,
 }: {
   day: string;
   shift: Shift;
+  departments?: Shift["department"][];
   member?: TeamMember;
   now: string;
   canMessage: boolean;
@@ -44,8 +46,8 @@ export function AssignmentRow({
   const onCall =
     Date.parse(shift.start) <= Date.parse(now) &&
     Date.parse(now) < Date.parse(shift.end);
-  const continues = utcDay(shift.start) < day;
-  const nextDay = utcDay(shift.end) > day;
+  const continues = localDay(shift.start) < day;
+  const nextDay = localDay(shift.end) > day;
   return (
     <View
       testID={`assignment-${shift.id}`}
@@ -55,9 +57,14 @@ export function AssignmentRow({
       ]}
     >
       <Text style={styles.eyebrow}>
-        {shift.department
-          ? DEPARTMENTS.find((d) => d.id === shift.department)?.name
-          : "Primary coverage"}
+        {departments
+          .map((department) =>
+            department
+              ? (DEPARTMENTS.find((d) => d.id === department)?.name ??
+                department)
+              : "Primary coverage",
+          )
+          .join(" · ")}
       </Text>
       <View style={styles.spread}>
         <View style={[styles.row, { flex: 1, minWidth: 0 }]}>
@@ -80,7 +87,7 @@ export function AssignmentRow({
         />
       </View>
       <Text style={styles.text}>
-        {time(shift.start)}–{time(shift.end)} UTC
+        {localShiftTime(shift.start)}–{localShiftTime(shift.end)}
         {nextDay ? " · ends next day" : ""}
       </Text>
       {member && (

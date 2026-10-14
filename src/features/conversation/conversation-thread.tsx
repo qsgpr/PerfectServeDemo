@@ -84,11 +84,10 @@ export function ConversationThread({
         keyboardVerticalOffset={0}
       >
         <View
+          testID="conversation-surface"
           style={{
             flex: 1,
             width: "100%",
-            maxWidth: 1000,
-            alignSelf: "center",
             backgroundColor: colors.paper,
           }}
         >
@@ -125,7 +124,14 @@ export function ConversationThread({
               if (nearBottom.current)
                 scroll.current?.scrollToEnd({ animated: false });
             }}
-            contentContainerStyle={{ padding: 18, paddingBottom: 26, gap: 18 }}
+            contentContainerStyle={{
+              width: "100%",
+              maxWidth: 1000,
+              alignSelf: "center",
+              padding: 18,
+              paddingBottom: 26,
+              gap: 18,
+            }}
           >
             <View
               style={{

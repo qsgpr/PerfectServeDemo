@@ -18,6 +18,8 @@ import { useTheme } from "../../theme/theme-provider";
 import { useAuth } from "./auth-provider";
 import { DEMO_ACCOUNT, validateLogin } from "./auth-service";
 import { perfectServeLogo } from "../../components/logo";
+import { supabase } from "../../data/supabase";
+import { recoveryRedirect, validateRecoveryEmail } from "./password-recovery";
 const lightPalette = {
   ink: "#101B15",
   green: "#005A50",
@@ -50,6 +52,7 @@ export default function Login() {
   const wide = width >= 900;
   const { signIn, signUp, cloud, storageError } = useAuth();
   const [creating, setCreating] = useState(false);
+  const [recovering, setRecovering] = useState(false);
   const [name, setName] = useState("");
   const [notice, setNotice] = useState("");
   const [email, setEmail] = useState("");
@@ -61,7 +64,9 @@ export default function Login() {
   const passwordInput = useRef<TextInput>(null);
   const submit = async () => {
     if (lock.current) return;
-    const validation = validateLogin(email, password);
+    const validation = recovering
+      ? validateRecoveryEmail(email)
+      : validateLogin(email, password);
     if (validation) {
       setError(validation);
       return;
@@ -70,7 +75,24 @@ export default function Login() {
     setBusy(true);
     setError("");
     try {
-      if (creating) {
+      if (recovering) {
+        if (!supabase)
+          throw new Error("Password recovery requires a configured backend.");
+        const origin =
+          Platform.OS === "web"
+            ? window.location.origin
+            : process.env.EXPO_PUBLIC_WEB_URL;
+        if (!origin)
+          throw new Error("Open the web app to reset your password.");
+        const { error } = await supabase.auth.resetPasswordForEmail(
+          email.trim(),
+          { redirectTo: recoveryRedirect(origin) },
+        );
+        if (error) throw error;
+        setNotice(
+          "If an account exists for this email, you’ll receive a password reset link. Check your inbox and spam folder.",
+        );
+      } else if (creating) {
         const signedIn = await signUp(email, password, name);
         if (!signedIn) {
           setNotice("Check your email to confirm your account, then sign in.");
@@ -203,10 +225,18 @@ export default function Login() {
             <View style={[s.form, { padding: wide ? 40 : 24 }]}>
               <Text style={s.kicker}>WELCOME TO SHIFTLINE</Text>
               <Text accessibilityRole="header" style={s.title}>
-                {creating ? "Join your team." : "Welcome back."}
+                {recovering
+                  ? "Reset your password."
+                  : creating
+                    ? "Join your team."
+                    : "Welcome back."}
               </Text>
               <Text style={s.description}>
-                Sign in to connect with your care team.
+                {recovering
+                  ? "Enter your email and we’ll send you a reset link."
+                  : creating
+                    ? "Create your account, then take a quick, skippable tour."
+                    : "Sign in to connect with your care team."}
               </Text>
 
               {creating && (
@@ -254,44 +284,49 @@ export default function Login() {
                   onSubmitEditing={() => passwordInput.current?.focus()}
                 />
               </View>
-              <View>
-                <Text style={s.label}>Password</Text>
-                <View style={s.passwordRow}>
-                  <TextInput
-                    ref={passwordInput}
-                    accessibilityLabel="Password"
-                    style={[s.input, { borderWidth: 0, flex: 1, minWidth: 0 }]}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!visible}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    autoComplete="off"
-                    textContentType="none"
-                    editable={!busy}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#6A746D"
-                    returnKeyType="go"
-                    onSubmitEditing={() => void submit()}
-                  />
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      visible ? "Hide password" : "Show password"
-                    }
-                    accessibilityState={{ disabled: busy }}
-                    disabled={busy}
-                    onPress={() => setVisible((v) => !v)}
-                    style={s.eye}
-                  >
-                    <Feather
-                      name={visible ? "eye-off" : "eye"}
-                      color={palette.muted}
-                      size={20}
+              {!recovering && (
+                <View>
+                  <Text style={s.label}>Password</Text>
+                  <View style={s.passwordRow}>
+                    <TextInput
+                      ref={passwordInput}
+                      accessibilityLabel="Password"
+                      style={[
+                        s.input,
+                        { borderWidth: 0, flex: 1, minWidth: 0 },
+                      ]}
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={!visible}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="off"
+                      textContentType="none"
+                      editable={!busy}
+                      placeholder="Enter your password"
+                      placeholderTextColor="#6A746D"
+                      returnKeyType="go"
+                      onSubmitEditing={() => void submit()}
                     />
-                  </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        visible ? "Hide password" : "Show password"
+                      }
+                      accessibilityState={{ disabled: busy }}
+                      disabled={busy}
+                      onPress={() => setVisible((v) => !v)}
+                      style={s.eye}
+                    >
+                      <Feather
+                        name={visible ? "eye-off" : "eye"}
+                        color={palette.muted}
+                        size={20}
+                      />
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
+              )}
               {!!error && (
                 <Text
                   accessibilityRole="alert"
@@ -303,7 +338,13 @@ export default function Login() {
               )}
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={creating ? "Create account" : "Sign in"}
+                accessibilityLabel={
+                  recovering
+                    ? "Send reset link"
+                    : creating
+                      ? "Create account"
+                      : "Sign in"
+                }
                 accessibilityState={{ disabled: busy, busy }}
                 disabled={busy}
                 onPress={() => void submit()}
@@ -317,7 +358,11 @@ export default function Login() {
                 ) : (
                   <>
                     <Text style={s.submitText}>
-                      {creating ? "Create account" : "Sign in"}
+                      {recovering
+                        ? "Send reset link"
+                        : creating
+                          ? "Create account"
+                          : "Sign in"}
                     </Text>
                     <Feather
                       name="arrow-right"
@@ -328,6 +373,29 @@ export default function Login() {
                 )}
               </Pressable>
               {cloud && (
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={busy}
+                  onPress={() => {
+                    setRecovering(!recovering);
+                    setCreating(false);
+                    setError("");
+                    setNotice("");
+                  }}
+                  style={s.fillButton}
+                >
+                  <Text
+                    style={{
+                      color: palette.green,
+                      fontWeight: "600",
+                      textAlign: "center",
+                    }}
+                  >
+                    {recovering ? "Back to sign in" : "Forgot password?"}
+                  </Text>
+                </Pressable>
+              )}
+              {cloud && !recovering && (
                 <Pressable
                   accessibilityRole="button"
                   disabled={busy}

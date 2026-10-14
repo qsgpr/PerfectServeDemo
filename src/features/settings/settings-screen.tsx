@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { ReachabilityPanel } from "../workflows/reachability-panel";
 import React, { useEffect, useState } from "react";
 import {
@@ -22,13 +23,22 @@ export default function Settings() {
         );
   }, [session]);
   return (
-    <Page title="Settings" subtitle="Your account and appearance.">
+    <Page
+      compact
+      title="Your preferences"
+      subtitle="Your account and appearance."
+    >
       <Text style={styles.text}>{session?.email}</Text>
       {storageError && (
         <Text accessibilityRole="alert" style={styles.text}>
           {storageError}
         </Text>
       )}
+      <Button
+        title="Replay welcome tour"
+        secondary
+        onPress={() => router.push("/onboarding")}
+      />
       <ReachabilityPanel />
       <PreferencesPanel playback={false} />
       <Text style={styles.heading}>Message notifications</Text>

@@ -5,7 +5,16 @@ import {
 } from "../src/data/schedule-fixtures";
 import { coverage } from "../src/data/care-service";
 import { createAppClock, CLOCK_PRESETS } from "../src/domain/clock";
-import { monthCells, moveMonth, shiftsForDay } from "../src/domain/schedule";
+import {
+  monthCells,
+  moveMonth,
+  shiftsForDay,
+  localDay,
+  localShiftsForDay,
+  localShiftTime,
+  hideCompletedShifts,
+  groupShiftsByMember,
+} from "../src/domain/schedule";
 
 describe("monthly fictional coverage", () => {
   it("covers all October without gaps and changes providers exactly at handoff", () => {
@@ -90,5 +99,73 @@ describe("monthly fictional coverage", () => {
     expect(clock.now()).toBe(CLOCK_PRESETS[1].at);
     clock.set(-1);
     expect(clock.now()).toBe(realTime);
+  });
+});
+
+describe("local schedule presentation", () => {
+  it("hides completed assignments exactly at their ending instant", () => {
+    const shifts = makeOctoberSchedule();
+    const now = shifts[1].end;
+    const remaining = hideCompletedShifts(shifts, now);
+    expect(remaining).not.toContainEqual(shifts[1]);
+    expect(remaining).toContainEqual(shifts[2]);
+  });
+  it("groups shifts by local midnight, including overnight carryover", () => {
+    const start = new Date(2026, 9, 14, 23).toISOString();
+    const end = new Date(2026, 9, 15, 3).toISOString();
+    const shift = { id: "night", memberId: "mira", start, end };
+    expect(localDay(start)).toBe("2026-10-14");
+    expect(localShiftsForDay([shift], "2026-10-15")).toEqual([shift]);
+    expect(localShiftsForDay([shift], "2026-10-16")).toEqual([]);
+  });
+  it("formats 12-hour times in the selected local zone", () => {
+    expect(localShiftTime("2026-10-14T19:00:00Z", "America/Puerto_Rico")).toBe(
+      "3:00 PM",
+    );
+    expect(localShiftTime("2026-10-15T07:00:00Z", "America/Puerto_Rico")).toBe(
+      "3:00 AM",
+    );
+  });
+});
+
+describe("grouped coverage", () => {
+  const primary = {
+    id: "primary",
+    memberId: "noa",
+    start: "2026-10-14T07:00:00Z",
+    end: "2026-10-14T19:00:00Z",
+  };
+  it("combines a teammate's matching shifts across departments without changing source data", () => {
+    const cardiology = {
+      ...primary,
+      id: "cardiology",
+      department: "cardiology",
+      start: "2026-10-14T03:00:00-04:00",
+    };
+    const shifts = [primary, cardiology, { ...cardiology, id: "duplicate" }];
+    const grouped = groupShiftsByMember(shifts);
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].departments).toEqual([undefined, "cardiology"]);
+    expect(primary).not.toHaveProperty("departments");
+    expect(groupShiftsByMember(shifts, false)).toHaveLength(3);
+  });
+  it("keeps different hours and teammates separate, including overlapping shifts", () => {
+    expect(
+      groupShiftsByMember([
+        primary,
+        { ...primary, id: "later", start: "2026-10-14T08:00:00Z" },
+        { ...primary, id: "other", memberId: "mira" },
+      ]),
+    ).toHaveLength(3);
+    expect(groupShiftsByMember([])).toEqual([]);
+  });
+  it("shows only the coverage surviving a department filter", () => {
+    const cardiology = {
+      ...primary,
+      id: "cardiology",
+      department: "cardiology",
+    };
+    const grouped = groupShiftsByMember([cardiology]);
+    expect(grouped[0].departments).toEqual(["cardiology"]);
   });
 });

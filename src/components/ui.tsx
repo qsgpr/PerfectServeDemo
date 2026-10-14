@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Animated,
+  Image,
+  ImageSourcePropType,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -16,21 +19,29 @@ import { Colors, useTheme } from "../theme/theme-provider";
 import { router, useSegments } from "expo-router";
 import { chatPreview } from "../domain/chat";
 import { tourStep } from "../features/presentation/simulation";
+import { portraitIndex } from "../domain/portrait-selection";
+import { useAuth } from "../features/auth/auth-provider";
+import { teamPortraits } from "./team-portraits";
 export function useUI() {
   const theme = useTheme();
-  const styles = useMemo(() => makeStyles(theme.colors), [theme.colors]);
-  return { ...theme, styles };
+  const { width } = useWindowDimensions();
+  const compactLayout = width < 600;
+  const styles = useMemo(
+    () => makeStyles(theme.colors, compactLayout),
+    [theme.colors, compactLayout],
+  );
+  return { ...theme, styles, compactLayout };
 }
-const makeStyles = (colors: Colors) =>
+const makeStyles = (colors: Colors, compact: boolean) =>
   StyleSheet.create({
     page: { flex: 1, backgroundColor: colors.paper },
     content: {
       width: "100%",
       maxWidth: 1040,
       alignSelf: "center",
-      padding: 20,
+      padding: compact ? 16 : 20,
       paddingBottom: 40,
-      gap: 20,
+      gap: compact ? 16 : 20,
     },
     row: {
       flexDirection: "row",
@@ -46,14 +57,22 @@ const makeStyles = (colors: Colors) =>
       flexWrap: "wrap",
     },
     title: {
-      fontSize: 32,
-      lineHeight: 39,
+      fontSize: compact ? 26 : 32,
+      lineHeight: compact ? 33 : 39,
       fontWeight: "700",
       color: colors.ink,
       letterSpacing: -1,
     },
-    subtitle: { fontSize: 15, lineHeight: 23, color: colors.muted },
-    heading: { fontSize: 19, fontWeight: "700", color: colors.ink },
+    subtitle: {
+      fontSize: compact ? 14 : 15,
+      lineHeight: compact ? 21 : 23,
+      color: colors.muted,
+    },
+    heading: {
+      fontSize: compact ? 17 : 19,
+      fontWeight: "700",
+      color: colors.ink,
+    },
     text: { fontSize: 15, lineHeight: 23, color: colors.ink },
     small: { fontSize: 12, lineHeight: 18, color: colors.muted },
     eyebrow: {
@@ -64,20 +83,22 @@ const makeStyles = (colors: Colors) =>
     },
     card: {
       backgroundColor: colors.white,
-      padding: 20,
+      padding: compact ? 16 : 20,
       borderRadius: 18,
       borderWidth: 1,
       borderColor: colors.line,
-      gap: 14,
+      gap: compact ? 12 : 14,
     },
     input: {
+      width: "100%",
+      flexShrink: 0,
       backgroundColor: colors.white,
       borderWidth: 1,
       borderColor: "#9AAEA6",
       borderRadius: 12,
-      minHeight: 50,
+      minHeight: 48,
       paddingHorizontal: 16,
-      paddingVertical: 13,
+      paddingVertical: 11,
       fontSize: 16,
       color: colors.ink,
     },
@@ -101,7 +122,7 @@ export function Button({
   disabled?: boolean;
   icon?: React.ComponentProps<typeof Feather>["name"];
 }) {
-  const { colors } = useUI();
+  const { colors, compactLayout } = useUI();
   return (
     <Pressable
       accessibilityRole="button"
@@ -110,9 +131,9 @@ export function Button({
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: 48,
-        paddingHorizontal: 18,
-        paddingVertical: 13,
+        minHeight: compactLayout ? 44 : 48,
+        paddingHorizontal: compactLayout ? 14 : 18,
+        paddingVertical: compactLayout ? 10 : 13,
         borderRadius: 12,
         backgroundColor: secondary ? colors.soft : colors.teal,
         opacity: disabled ? 0.45 : pressed ? 0.75 : 1,
@@ -224,10 +245,21 @@ export function Avatar({
   member: TeamMember;
   large?: boolean;
 }) {
+  const { session } = useAuth();
+  const index = portraitIndex({
+    ...member,
+    email: session?.id === member.userId ? session?.email : undefined,
+  });
+  const portrait = index === undefined ? undefined : teamPortraits[index];
+  const [failedSource, setFailedSource] = useState<ImageSourcePropType | null>(
+    null,
+  );
+  const size = large ? 64 : 44;
   return (
     <View
       style={{
         flexShrink: 0,
+        overflow: "hidden",
         width: large ? 64 : 44,
         height: large ? 64 : 44,
         borderRadius: large ? 22 : 15,
@@ -236,15 +268,33 @@ export function Avatar({
         justifyContent: "center",
       }}
     >
-      <Text
-        style={{
-          color: "#192F39",
-          fontWeight: "700",
-          fontSize: large ? 21 : 14,
-        }}
-      >
-        {member.initials}
-      </Text>
+      {portrait && failedSource !== portrait.source ? (
+        <Image
+          source={portrait.source}
+          accessibilityLabel={member.name + " profile photo"}
+          resizeMode="cover"
+          onError={() => setFailedSource(portrait.source)}
+          style={{
+            position: "absolute",
+            width: size * portrait.zoom,
+            height: size * portrait.zoom,
+            left: size / 2 - portrait.x * size * portrait.zoom,
+            top: size / 2 - portrait.y * size * portrait.zoom,
+          }}
+        />
+      ) : member.kind === "ai" || member.id === "nova" ? (
+        <Feather name="cpu" size={large ? 30 : 23} color="#192F39" />
+      ) : (
+        <Text
+          style={{
+            color: "#192F39",
+            fontWeight: "700",
+            fontSize: large ? 21 : 14,
+          }}
+        >
+          {member.initials}
+        </Text>
+      )}
     </View>
   );
 }

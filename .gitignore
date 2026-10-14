@@ -58,3 +58,6 @@ Thumbs.db
 *.zip
 *.tar
 *.tar.gz
+
+# Local interview study materials
+/public/study/

@@ -39,10 +39,14 @@ export async function requestAI(
   base: string,
   body: AIRequest,
   signal: AbortSignal,
+  token?: string,
 ): Promise<string> {
   const response = await fetch(base + "/reply", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: "Bearer " + token } : {}),
+    },
     body: JSON.stringify(body),
     signal,
   });

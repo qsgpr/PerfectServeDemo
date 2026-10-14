@@ -2,13 +2,8 @@ import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../auth/auth-provider";
 import { Feather } from "@expo/vector-icons";
-import {
-  Avatar,
-  Button,
-  time,
-  useUI,
-  PresenceLabel,
-} from "../../components/ui";
+import { Avatar, Button, useUI, PresenceLabel } from "../../components/ui";
+import { localShiftTime } from "../../domain/schedule";
 import type { TeamMember, Shift } from "../../domain/types";
 export function OnCallCard({
   provider,
@@ -21,7 +16,7 @@ export function OnCallCard({
   current?: Shift;
   next?: Shift;
 }) {
-  const { colors, styles } = useUI();
+  const { colors, styles, compactLayout } = useUI();
   const { session } = useAuth();
   const yourShift = !!provider?.userId && provider.userId === session?.id;
   return (
@@ -32,8 +27,8 @@ export function OnCallCard({
         {
           backgroundColor: colors.hero,
           borderColor: colors.hero,
-          padding: 22,
-          gap: 20,
+          padding: compactLayout ? 16 : 22,
+          gap: compactLayout ? 14 : 20,
         },
       ]}
     >
@@ -48,8 +43,8 @@ export function OnCallCard({
               <Text
                 style={{
                   color: "white",
-                  fontSize: 25,
-                  lineHeight: 32,
+                  fontSize: compactLayout ? 21 : 25,
+                  lineHeight: compactLayout ? 27 : 32,
                   fontWeight: "600",
                 }}
               >
@@ -71,7 +66,7 @@ export function OnCallCard({
                 flex: 1,
               }}
             >
-              {time(current!.start)}–{time(current!.end)} UTC
+              {localShiftTime(current!.start)}–{localShiftTime(current!.end)}
             </Text>
           </View>
           {yourShift ? (
@@ -114,7 +109,7 @@ export function OnCallCard({
         </Text>
         <Text style={{ color: "white", fontSize: 15, lineHeight: 23 }}>
           {nextProvider
-            ? nextProvider.name + " · " + time(next!.start) + " UTC"
+            ? nextProvider.name + " · " + localShiftTime(next!.start)
             : "No upcoming shifts"}
         </Text>
       </View>

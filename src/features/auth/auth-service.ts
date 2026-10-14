@@ -7,6 +7,7 @@ export interface DemoSession {
   id: string;
   name: string;
   email: string;
+  onboardingVersion?: number;
 }
 export interface AuthService {
   signIn(email: string, password: string): Promise<DemoSession>;

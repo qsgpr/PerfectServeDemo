@@ -13,7 +13,9 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.qsgpr.shiftline"
     },
-    "web": {},
+    "web": {
+      "favicon": "./assets/perfectserve-favicon.png"
+    },
     "plugins": [
       "expo-router",
       "expo-font",

@@ -97,6 +97,7 @@ export function Inbox() {
               accessibilityRole="button"
               accessibilityLabel="Filter conversations"
               accessibilityState={{ expanded: filtersOpen }}
+              aria-expanded={filtersOpen}
               onPress={() => setFiltersOpen(true)}
               style={{
                 minHeight: 44,
@@ -213,7 +214,8 @@ export function Inbox() {
             style={{
               width: "100%",
               maxWidth: 520,
-              maxHeight: "85%",
+              height: "85%",
+              maxHeight: 620,
               alignSelf: "center",
               borderRadius: 22,
               backgroundColor: colors.paper,
@@ -224,7 +226,10 @@ export function Inbox() {
             <Text accessibilityRole="header" style={styles.heading}>
               Filter conversations
             </Text>
-            <ScrollView contentContainerStyle={{ gap: 16 }}>
+            <ScrollView
+              style={{ flex: 1, minHeight: 0 }}
+              contentContainerStyle={{ gap: 16 }}
+            >
               <Text style={styles.label}>Department</Text>
               <TeamSpaces
                 selected={space}

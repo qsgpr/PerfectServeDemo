@@ -1,12 +1,14 @@
 import React, { useEffect } from "react";
 import {
   router,
+  usePathname,
   Stack,
   ThemeProvider,
   DarkTheme,
   DefaultTheme,
 } from "expo-router";
 import { LoadingSkeleton } from "../components/ui";
+import { BackButton } from "../components/back-button";
 import { AppHeader } from "../components/app-header";
 import { IncomingNotice } from "../features/notifications/incoming-notice";
 import { StatusBar } from "expo-status-bar";
@@ -14,6 +16,7 @@ import { AuthProvider, useAuth } from "../features/auth/auth-provider";
 import { WorkflowProvider } from "../state/workflow-provider";
 import { CareProvider, useCare } from "../state/care-provider";
 import { PreferencesProvider, useTheme } from "../theme/theme-provider";
+import { needsOnboarding } from "../features/onboarding/onboarding-model";
 function TourNavigation() {
   const { tour } = useCare();
   useEffect(() => {
@@ -26,7 +29,21 @@ function TourNavigation() {
   return null;
 }
 function Navigation() {
-  const { session, ready } = useAuth();
+  const { session, ready, recoveryMode } = useAuth();
+  const pathname = usePathname();
+  const onboarding = !!session && needsOnboarding(session.onboardingVersion);
+  useEffect(() => {
+    if (ready && recoveryMode && pathname !== "/reset-password") {
+      router.replace("/reset-password");
+    } else if (
+      ready &&
+      !recoveryMode &&
+      onboarding &&
+      pathname !== "/onboarding"
+    ) {
+      router.replace("/onboarding");
+    }
+  }, [ready, recoveryMode, onboarding, pathname]);
   const { colors, dark } = useTheme();
   const base = dark ? DarkTheme : DefaultTheme;
   if (!ready) return <LoadingSkeleton />;
@@ -44,7 +61,9 @@ function Navigation() {
         },
       }}
     >
-      <CareProvider key={session?.id ?? "signed-out"}>
+      <CareProvider
+        key={recoveryMode ? "recovery" : (session?.id ?? "signed-out")}
+      >
         <WorkflowProvider>
           <TourNavigation />
           <StatusBar style={dark ? "light" : "dark"} />
@@ -53,13 +72,15 @@ function Navigation() {
               headerStyle: { backgroundColor: colors.paper },
               headerTintColor: colors.ink,
               headerShadowVisible: false,
+              headerLeft: () => <BackButton />,
+              headerBackVisible: false,
               contentStyle: { backgroundColor: colors.paper },
             }}
           >
-            <Stack.Protected guard={!session}>
+            <Stack.Protected guard={!session && !recoveryMode}>
               <Stack.Screen name="login" options={{ headerShown: false }} />
             </Stack.Protected>
-            <Stack.Protected guard={!!session}>
+            <Stack.Protected guard={!!session && !recoveryMode && !onboarding}>
               <Stack.Screen
                 name="(tabs)"
                 options={{
@@ -91,8 +112,18 @@ function Navigation() {
                 options={{ title: "Conversation", headerShown: false }}
               />
             </Stack.Protected>
+            <Stack.Protected guard={!!session && !recoveryMode}>
+              <Stack.Screen
+                name="onboarding"
+                options={{ headerShown: false }}
+              />
+            </Stack.Protected>
+            <Stack.Screen
+              name="reset-password"
+              options={{ headerShown: false }}
+            />
           </Stack>
-          {!!session && <IncomingNotice />}
+          {!!session && !onboarding && !recoveryMode && <IncomingNotice />}
         </WorkflowProvider>
       </CareProvider>
     </ThemeProvider>

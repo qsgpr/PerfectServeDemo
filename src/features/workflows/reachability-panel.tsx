@@ -142,7 +142,10 @@ function ReachabilityForm({ initial }: { initial: Reachability }) {
             setStart(v);
             setStatus("");
           }}
-          style={[styles.input, { flex: 1 }]}
+          style={[
+            styles.input,
+            { flex: 1, minWidth: 0, width: undefined, flexShrink: 1 },
+          ]}
           autoCorrect={false}
         />
         <TextInput
@@ -155,7 +158,10 @@ function ReachabilityForm({ initial }: { initial: Reachability }) {
             setEnd(v);
             setStatus("");
           }}
-          style={[styles.input, { flex: 1 }]}
+          style={[
+            styles.input,
+            { flex: 1, minWidth: 0, width: undefined, flexShrink: 1 },
+          ]}
           autoCorrect={false}
         />
       </View>

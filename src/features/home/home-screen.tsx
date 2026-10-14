@@ -1,3 +1,4 @@
+import { Feather } from "@expo/vector-icons";
 import { OnCallCard } from "./on-call-card";
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
@@ -13,7 +14,7 @@ import {
   useUI,
 } from "../../components/ui";
 export function Home() {
-  const { colors, styles } = useUI();
+  const { colors, styles, compactLayout } = useUI();
   const { data, realNow } = useCare();
   const { current, next } = coverage(data?.shifts ?? [], realNow);
   const provider = data?.team.find((member) => member.id === current?.memberId);
@@ -25,19 +26,37 @@ export function Home() {
     weekday: "long",
     month: "long",
     day: "numeric",
-    timeZone: "UTC",
   });
   return (
     <DataGate>
       <Page
+        compact
         title="Today"
         subtitle={date}
         action={
-          <Button
-            title="New message"
-            icon="plus"
-            onPress={() => router.push("/compose")}
-          />
+          compactLayout ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="New message"
+              onPress={() => router.push("/compose")}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                backgroundColor: colors.teal,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Feather name="plus" size={21} color={colors.onAccent} />
+            </Pressable>
+          ) : (
+            <Button
+              title="New message"
+              icon="plus"
+              onPress={() => router.push("/compose")}
+            />
+          )
         }
       >
         <OnCallCard

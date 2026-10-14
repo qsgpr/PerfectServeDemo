@@ -1,9 +1,18 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useTheme } from "../theme/theme-provider";
+import { Avatar } from "./ui";
+import { useAuth } from "../features/auth/auth-provider";
+import { useCare } from "../state/care-provider";
 export function Brand() {
   const { colors } = useTheme();
   return (
@@ -48,6 +57,19 @@ export function Brand() {
   );
 }
 export function AppHeader() {
+  const { width } = useWindowDimensions();
+  const desktop = Platform.OS === "web" && width >= 1024;
+  const { session } = useAuth();
+  const { data } = useCare();
+  const member = data?.team.find((person) => person.userId === session?.id) ?? {
+    id: session?.id ?? "viewer",
+    userId: session?.id,
+    name: session?.name ?? "Teammate",
+    role: "Team member",
+    specialty: "",
+    initials: session?.name.slice(0, 2).toUpperCase() ?? "TM",
+    color: "#DCEDE7",
+  };
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   return (
@@ -62,34 +84,54 @@ export function AppHeader() {
     >
       <View
         style={{
-          height: 64,
+          height: width < 600 ? 56 : 64,
           width: "100%",
-          maxWidth: 1040,
+          maxWidth: desktop ? undefined : 1040,
           alignSelf: "center",
-          paddingHorizontal: 20,
+          paddingHorizontal: desktop ? 0 : width < 600 ? 16 : 20,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 16,
+          gap: desktop ? 0 : 16,
         }}
       >
-        <Brand />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open settings"
-          onPress={() => router.push("/settings")}
-          style={{
-            width: 44,
-            height: 44,
-            flexShrink: 0,
-            borderRadius: 16,
-            backgroundColor: colors.soft,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+        <View
+          style={desktop ? { width: 224, paddingHorizontal: 24 } : undefined}
         >
-          <Feather name="user" size={21} color={colors.teal} />
-        </Pressable>
+          <Brand />
+        </View>
+        <View style={desktop ? { flex: 1 } : undefined}>
+          <View
+            style={
+              desktop
+                ? {
+                    width: "100%",
+                    maxWidth: 1040,
+                    alignSelf: "center",
+                    paddingHorizontal: 20,
+                    alignItems: "flex-end",
+                  }
+                : undefined
+            }
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open settings"
+              onPress={() => router.push("/settings")}
+              style={{
+                width: 44,
+                height: 44,
+                flexShrink: 0,
+                borderRadius: 16,
+                backgroundColor: colors.soft,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Avatar member={member} />
+            </Pressable>
+          </View>
+        </View>
       </View>
     </View>
   );

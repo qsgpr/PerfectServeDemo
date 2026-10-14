@@ -5,7 +5,8 @@ import {
   dayLabel,
   monthCells,
   monthLabel,
-  shiftsForDay,
+  localShiftsForDay,
+  groupShiftsByMember,
 } from "../../domain/schedule";
 import type { Shift } from "../../domain/types";
 
@@ -14,6 +15,7 @@ interface CalendarProps {
   selectedDay: string;
   today: string;
   shifts: Shift[];
+  groupByMember?: boolean;
   onSelect: (day: string) => void;
   onMoveMonth: (offset: number) => void;
   onToday: () => void;
@@ -23,6 +25,7 @@ export function MonthCalendar({
   selectedDay,
   today,
   shifts,
+  groupByMember = false,
   onSelect,
   onMoveMonth,
   onToday,
@@ -88,7 +91,10 @@ export function MonthCalendar({
             );
           const selected = day === selectedDay;
           const currentDay = day === today;
-          const assignments = shiftsForDay(shifts, day);
+          const assignments = groupShiftsByMember(
+            localShiftsForDay(shifts, day),
+            groupByMember,
+          );
           return (
             <View key={day} style={{ width: "14.285714%", padding: 2 }}>
               <Pressable

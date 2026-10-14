@@ -4,8 +4,11 @@ A React Native and TypeScript care-team communication prototype built with Expo 
 
 ## Features
 
+- Skippable welcome tour for new registrations, with replay from Settings.
+- Email password recovery and a dedicated reset-password screen.
+- Responsive navigation: a sidebar on desktop browsers and bottom tabs on mobile.
 - Searchable contacts and direct or department-based messaging.
-- Monthly on-call calendar with primary and department coverage.
+- Monthly on-call calendar with local AM/PM times, completed-shift filtering, and grouping of matching assignments across departments.
 - Text and photo conversations, typing indicators, read receipts, and priority.
 - Persisted availability, quiet hours, backup routing, and shared shift handoffs.
 - Nova AI replies with account/schedule context, a visible recent-message window, and reviewed handoff drafts.
@@ -24,7 +27,7 @@ npm run web
 npm run phone
 ```
 
-Without Supabase variables, the login screen offers a fictional sample account. All fixture names, messages, and schedules are fictional. The October 2026 schedule follows real UTC time and shows no coverage outside the seeded range.
+Without Supabase variables, the login screen offers a fictional sample account. All fixture names, messages, and schedules are fictional. The October 2026 schedule stores UTC timestamps, follows real time, and displays dates and times in the viewer's local timezone. It shows no coverage outside the seeded range.
 
 ## Shared accounts with Supabase
 

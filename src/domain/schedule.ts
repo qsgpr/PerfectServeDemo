@@ -4,6 +4,57 @@ export const DAY_MS = 24 * 60 * 60 * 1000;
 export const utcDay = (date: string | Date) =>
   new Date(date).toISOString().slice(0, 10);
 export const monthOf = (day: string) => day.slice(0, 7);
+export function localDay(date: string | Date) {
+  const value = new Date(date);
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+}
+export function localShiftTime(date: string, timeZone?: string) {
+  return new Date(date).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone,
+  });
+}
+export function hideCompletedShifts(shifts: Shift[], now: string) {
+  return shifts.filter((shift) => Date.parse(shift.end) > Date.parse(now));
+}
+export type ShiftGroup = Shift & { departments: Shift["department"][] };
+export function groupShiftsByMember(
+  shifts: Shift[],
+  combine = true,
+): ShiftGroup[] {
+  const groups = new Map<string, ShiftGroup>();
+  for (const shift of shifts) {
+    // Equal instants may arrive with different offsets or timestamp precision.
+    const key = combine
+      ? JSON.stringify([
+          shift.memberId,
+          Date.parse(shift.start),
+          Date.parse(shift.end),
+        ])
+      : shift.id;
+    const existing = groups.get(key);
+    if (existing) {
+      if (!existing.departments.includes(shift.department))
+        existing.departments.push(shift.department);
+    } else {
+      groups.set(key, { ...shift, departments: [shift.department] });
+    }
+  }
+  return [...groups.values()];
+}
+export function localShiftsForDay(shifts: Shift[], day: string) {
+  const [year, month, date] = day.split("-").map(Number);
+  const start = new Date(year, month - 1, date).getTime();
+  // Construct the next local midnight to account for daylight-saving changes.
+  const end = new Date(year, month - 1, date + 1).getTime();
+  return shifts
+    .filter(
+      (shift) => Date.parse(shift.start) < end && Date.parse(shift.end) > start,
+    )
+    .sort((a, b) => a.start.localeCompare(b.start));
+}
 export function moveMonth(month: string, offset: number) {
   const [year, number] = month.split("-").map(Number);
   return new Date(Date.UTC(year, number - 1 + offset, 1))
