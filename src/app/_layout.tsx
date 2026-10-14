@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useWebsiteVisitAlert } from "../features/notifications/use-website-visit-alert";
 import {
   router,
   usePathname,
@@ -130,6 +131,7 @@ function Navigation() {
   );
 }
 export default function RootLayout() {
+  useWebsiteVisitAlert();
   return (
     <PreferencesProvider>
       <AuthProvider>

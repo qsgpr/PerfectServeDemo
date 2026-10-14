@@ -76,3 +76,7 @@ Cloud browser tests require disposable QA accounts via `SHIFTLINE_CLOUD_QA_FILE`
 Voice/video controls simulate calls. Background push requires a signed native build and Apple/Android credentials; Expo Go is not the completed background-delivery setup. Snapshot fetching is not server pagination, and AI context is read-only. This prototype has no EHR integration and makes no HIPAA-compliance claim. Use fictional data and non-patient images.
 
 This is an unofficial prototype, not a PerfectServe product. Referenced branding is documented in [asset attribution](assets/ATTRIBUTION.md); it is not covered by the code license. `app.json` includes the original EAS owner/project and app identifiers; configure your own before creating independent builds.
+
+### Website visit alerts
+
+Published web visits send a `Shiftline visited` notification to the existing portfolio ntfy topic. Alerts include approximate city/country (when available), operating system, and browser, with one alert per browser every 24 hours. Account details and conversation contents are not included. Local previews and native apps do not send visitor alerts. Browser blocking or network failures can prevent delivery; alerts never block the app.
