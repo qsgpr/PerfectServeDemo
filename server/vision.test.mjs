@@ -1,7 +1,7 @@
 import test from "node:test";
 import { Buffer } from "node:buffer";
 import assert from "node:assert/strict";
-import { validateRequest, kimiReply } from "./kimi.mjs";
+import { validateRequest, kimiReply, providerMessages } from "./kimi.mjs";
 import { resolveVisionImages, boundedImage } from "./vision.mjs";
 import { VISION_FIXTURES } from "./vision-fixtures.mjs";
 const path = "conversation-1/viewer/photo.png";
@@ -246,4 +246,27 @@ test("a stale capability denial is corrected once while retaining the actual pix
   });
   assert.equal(calls, 2);
   assert.equal(reply, "The board says Huddle at 19:30.");
+});
+
+test("image inspection excludes stale chat denials while retaining all image inputs", async () => {
+  const history = [];
+  for (let i = 0; i < 6; i++)
+    history.push(
+      { role: "user", content: "Can you read this?" },
+      { role: "assistant", content: "I can't see images or attachments." },
+    );
+  for (let i = 0; i < 3; i++)
+    history.push({
+      role: "user",
+      content: "Describe this team map.",
+      image: { attachmentId: "team-map", entryId: "map-" + i },
+    });
+  const request = { clockIndex: 0, conversationId: "inspect-test", history };
+  const images = await resolveVisionImages(request);
+  const messages = providerMessages(request, images);
+  assert.equal(messages.length, 4);
+  assert.equal(messages.filter((m) => m.role === "assistant").length, 0);
+  assert.equal(messages.filter((m) => Array.isArray(m.content)).length, 3);
+  request.history.push({ role: "user", content: "When is my next shift?" });
+  assert(providerMessages(request, images).some((m) => m.role === "assistant"));
 });
