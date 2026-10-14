@@ -28,7 +28,10 @@ test("provides fixed AI identity without inventing absent live context", () => {
     messages[0].content,
     /Mira each day|Current fictional clock/,
   );
-  assert.match(messages[0].content, /no tools/);
+  assert.match(
+    messages[0].content,
+    /cannot verify current clinical guidelines/,
+  );
   assert.equal(messages[1].content, "Who is on call?");
 });
 test("calls provider with server credential and returns only reply text", async () => {

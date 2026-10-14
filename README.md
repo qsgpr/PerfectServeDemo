@@ -11,7 +11,7 @@ A React Native and TypeScript care-team communication prototype built with Expo 
 - Monthly on-call calendar with local AM/PM times, completed-shift filtering, and grouping of matching assignments across departments.
 - Text and photo conversations, typing indicators, read receipts, and priority.
 - Persisted availability, quiet hours, backup routing, and shared shift handoffs.
-- Nova AI replies with account/schedule context, a visible recent-message window, and reviewed handoff drafts.
+- Nova AI replies with account/schedule context, image analysis, a visible recent-message window, and reviewed handoff drafts.
 - Resolved conversation archives and fresh-chat resets.
 
 ## Run locally
@@ -44,6 +44,8 @@ node --env-file=/absolute/path/to/private-ai.env server/index.mjs
 ```
 
 The service listens on port 8082. The app uses the Expo/browser host by default; set `EXPO_PUBLIC_AI_BASE_URL` if the phone needs a different reachable address. The AI server currently allows the original development hosts and browser port 8081; adjust `allowedHosts` in `server/index.mjs` for another development machine. AI failures retain the conversation and offer retry.
+
+Nova can read the built-in fictional handoff board and team map, plus JPEG, PNG, and WebP photos shared in its conversation. It sends the last three user images within the recent-message context to Kimi K2.6; `MOONSHOT_VISION_MODEL` can override the vision model on the server. Image analysis allows 4 MB per photo and 8 MB total per request. Device photos are fetched through the signed-in user's Supabase permissions and checked against the saved conversation. Arbitrary URLs are not fetched. PDFs and other document attachments are not supported. Use fictional coordination images; visual summaries can contain errors and need review.
 
 ## Checks
 

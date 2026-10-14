@@ -11,6 +11,8 @@ export async function pickChatPhoto(messageId: string): Promise<string | null> {
     mediaTypes: ["images"],
     allowsMultipleSelection: false,
     quality: 0.8,
+    preferredAssetRepresentationMode:
+      ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
   });
   if (selection.canceled) return null;
   const asset = selection.assets[0];

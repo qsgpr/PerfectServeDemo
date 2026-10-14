@@ -27,6 +27,7 @@ import { useSavedDraft } from "../../hooks/use-saved-draft";
 import { buildAIContext } from "../assistant/ai-context";
 import { requestAI } from "../assistant/ai-client";
 import { aiEndpoint } from "../assistant/ai-endpoint";
+import { supabase } from "../../data/supabase";
 const timestamp = (value: string) =>
   new Date(value).toLocaleString("en-US", { timeZone: "UTC" }) + " UTC";
 export default function Handoffs() {
@@ -258,6 +259,7 @@ function NewHandoff() {
       const job = controller.current;
       const timeout = setTimeout(() => job.abort(), 45000);
       try {
+        const authSession = supabase ? await supabase.auth.getSession() : null;
         const note = await requestAI(
           aiEndpoint(),
           {
@@ -266,6 +268,7 @@ function NewHandoff() {
             context: buildAIContext(session, data, new Date().toISOString()),
           },
           job.signal,
+          authSession?.data.session?.access_token,
         );
         if (note.length > 4000)
           throw new Error(

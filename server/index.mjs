@@ -1,6 +1,13 @@
 import { createServer } from "node:http";
+import { fileURLToPath } from "node:url";
 import { Buffer } from "node:buffer";
 import { kimiReply, validateRequest } from "./kimi.mjs";
+import { resolveVisionImages } from "./vision.mjs";
+try {
+  process.loadEnvFile(fileURLToPath(new URL("../.env.local", import.meta.url)));
+} catch {
+  /* Local cloud configuration is optional. */
+}
 const allowedHosts = new Set([
   "localhost",
   "127.0.0.1",
@@ -82,9 +89,41 @@ const server = createServer(async (req, res) => {
     };
     res.on("close", disconnect);
     try {
-      send(200, { text: await kimiReply(body, { signal: controller.signal }) });
+      let userId;
+      const authorization = req.headers.authorization;
+      if (
+        body.history.some(
+          (entry) => entry.image?.attachmentId === "device-photo",
+        )
+      ) {
+        const auth = await fetch(
+          process.env.EXPO_PUBLIC_SUPABASE_URL + "/auth/v1/user",
+          {
+            headers: {
+              apikey: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: authorization ?? "",
+            },
+            signal: controller.signal,
+          },
+        );
+        if (!auth.ok) {
+          send(401, { error: "Sign in to analyze a shared photo." });
+          return;
+        }
+        userId = (await auth.json()).id;
+      }
+      const images = await resolveVisionImages(body, {
+        base: process.env.EXPO_PUBLIC_SUPABASE_URL,
+        key: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+        authorization,
+        userId,
+        signal: controller.signal,
+      });
+      send(200, {
+        text: await kimiReply(body, { signal: controller.signal, images }),
+      });
     } catch (e) {
-      send(502, {
+      send(e.status ?? 502, {
         error: controller.signal.aborted
           ? "AI took too long. Please retry."
           : e.message,

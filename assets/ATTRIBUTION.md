@@ -33,3 +33,5 @@ At the user's request, the web favicon uses PerfectServe's public website favico
 - SVG: https://cdn.prod.website-files.com/6a7e9a49e5445d650964631e/6abead7a15de2f1ffe0403c1_favicon.svg
 
 The icon remains PerfectServe's property and does not imply affiliation or endorsement.
+
+The PNG illustrations under `public/nova-images/` and their server-side representations are raster versions of Shiftline’s original fictional handoff board and team map, used for Nova image analysis.

@@ -25,6 +25,7 @@ import { CHAT_IMAGES, SharedImage } from "./shared-image";
 import { CallSession } from "./call-session";
 import { Sheet } from "../../components/sheet";
 import { Bubble } from "./message-bubble";
+import { aiHistory } from "../assistant/ai-client";
 import { TypingBubble } from "./typing-bubble";
 export function ConversationThread({
   message,
@@ -181,7 +182,11 @@ export function ConversationThread({
               (typing.peerTyping || state?.phase === "typing") && (
                 <TypingBubble
                   label={
-                    isAI ? "Nova is thinking…" : "Your teammate is typing…"
+                    isAI
+                      ? aiHistory(message).some((entry) => entry.image)
+                        ? "Nova is analyzing your image…"
+                        : "Nova is thinking…"
+                      : "Your teammate is typing…"
                   }
                 />
               )}

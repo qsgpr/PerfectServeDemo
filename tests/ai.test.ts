@@ -59,7 +59,7 @@ describe("AI conversation", () => {
     expect((await service.load()).messages[0].status).toBe("Sent");
     expect((await service.load()).messages[0].chat).toHaveLength(2);
   });
-  it("caps context and describes local illustrations without sending images", async () => {
+  it("caps context and includes references to supplied images", async () => {
     const service = createMockService({ delay: 0 });
     let message = await service.send(draft, "one");
     for (let i = 0; i < 22; i++)
@@ -74,6 +74,11 @@ describe("AI conversation", () => {
       "image",
     );
     expect(aiRequest(message, 0).history).toHaveLength(20);
+    expect(aiRequest(message, 0).conversationId).toBe(message.id);
+    expect(aiRequest(message, 0).history.at(-1)?.image).toEqual({
+      attachmentId: "handoff-board",
+      entryId: message.chat!.at(-1)!.id,
+    });
     expect(aiRequest(message, 0).history.at(-1)?.content).toContain(
       "Shared fictional illustration",
     );
@@ -97,4 +102,27 @@ describe("AI conversation", () => {
       "Content-Type": "application/json",
     });
   });
+});
+
+it("keeps only the last three user image references and excludes images from AI replies", async () => {
+  const service = createMockService({ delay: 0 });
+  let message = await service.send(draft, "image-window");
+  for (let index = 0; index < 5; index++)
+    message = await service.post(
+      message.id,
+      { kind: "image", attachmentId: "handoff-board", text: "Board " + index },
+      "window-" + index,
+    );
+  const request = aiRequest(message, 0);
+  expect(request.history.filter((entry) => entry.image)).toHaveLength(3);
+  expect(
+    request.history
+      .filter((entry) => entry.image)
+      .map((entry) => entry.content),
+  ).toEqual(
+    [2, 3, 4].map(
+      (index) =>
+        "[Shared fictional illustration: handoff-board] Board " + index,
+    ),
+  );
 });
