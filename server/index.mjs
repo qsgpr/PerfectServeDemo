@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { Buffer } from "node:buffer";
 import { kimiReply, validateRequest } from "./kimi.mjs";
-import { resolveVisionImages } from "./vision.mjs";
+import { VisionError, resolveVisionImages } from "./vision.mjs";
 try {
   process.loadEnvFile(fileURLToPath(new URL("../.env.local", import.meta.url)));
 } catch {
@@ -77,8 +77,13 @@ const server = createServer(async (req, res) => {
     let body;
     try {
       body = validateRequest(JSON.parse(raw));
-    } catch {
-      send(400, { error: "Invalid conversation." });
+    } catch (error) {
+      send(400, {
+        error:
+          error instanceof VisionError
+            ? error.message
+            : "Invalid conversation.",
+      });
       return;
     }
     active++;

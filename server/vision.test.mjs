@@ -193,3 +193,57 @@ test("built-in board is sent as actual visual content with Kimi vision model and
   assert.match(payload.messages[0].content, /untrusted source material/);
   assert.match(payload.messages[0].content, /blurry or unreadable/);
 });
+
+test("older attachment placeholders fail clearly instead of producing a false capability denial", () => {
+  assert.throws(
+    () =>
+      validateRequest({
+        clockIndex: 0,
+        history: [
+          {
+            role: "user",
+            content:
+              "[Shared photo attachment, image not analyzed: device-photo] Read this",
+          },
+        ],
+      }),
+    /Refresh the app and reattach/,
+  );
+});
+test("a stale capability denial is corrected once while retaining the actual pixels", async () => {
+  const request = validateRequest(
+    body({ attachmentId: "handoff-board", entryId: "board" }),
+  );
+  const images = await resolveVisionImages(request);
+  let calls = 0;
+  const reply = await kimiReply(request, {
+    key: "fake-test-key",
+    images,
+    fetcher: async (url, init) => {
+      const payload = JSON.parse(init.body);
+      calls++;
+      assert.match(payload.messages[0].content, /1 actual image/);
+      assert(
+        payload.messages.some(
+          (message) =>
+            Array.isArray(message.content) &&
+            message.content.some((part) => part.type === "image_url"),
+        ),
+      );
+      return Response.json({
+        choices: [
+          {
+            message: {
+              content:
+                calls === 1
+                  ? "I can't see images or attachments."
+                  : "The board says Huddle at 19:30.",
+            },
+          },
+        ],
+      });
+    },
+  });
+  assert.equal(calls, 2);
+  assert.equal(reply, "The board says Huddle at 19:30.");
+});
